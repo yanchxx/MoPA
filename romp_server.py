@@ -1,17 +1,18 @@
 import os
+import sys
+import cv2
 import romp
 import json
 import torch
 import socket
 import warnings
 import numpy as np
-from PIL import Image
-from io import BytesIO
 from base64 import b64decode
 from multiprocessing import Process, Value, Manager, set_start_method
 set_start_method('spawn', force=True)
 model_path = os.path.join(os.path.expanduser("~"), '.romp')
 warnings.filterwarnings('ignore')
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -48,17 +49,17 @@ def convert_cam_to_3d_trans(cams, weight=2.):
     trans3d = np.stack([dx, dy, depth], 1)*weight
     return trans3d
 
-def decodeImg(img_bytes):
-    img = b64decode(img_bytes)
-    img = Image.open(BytesIO(img))
-    img_array = np.array(img)
+def decodeImg(img_string):
+    img_bytes = b64decode(img_string.encode('utf-8'))
+    img_encode = np.fromstring(img_bytes, np.uint8)
+    img_array = cv2.imdecode(img_encode, cv2.IMREAD_COLOR)
     return img_array
 
-def run_romp(receiver, sender, run, mode, gpu):
+def run_romp(client, receiver, sender, run, mode, gpu):
     settings = romp.main.default_settings
     settings.mode = mode
-    if mode == 'webcam':
-        settings.temporal_optimize = True
+    settings.smooth_coeff = 1
+
     if gpu == 'True' and torch.cuda.is_available():
         print(gpu)
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -67,7 +68,6 @@ def run_romp(receiver, sender, run, mode, gpu):
         settings.onnx = True
         settings.gpu = -1
     settings.show_largest = True
-    
     romp_model = romp.ROMP(settings)
 
     while run.value:
@@ -80,12 +80,12 @@ def run_romp(receiver, sender, run, mode, gpu):
             if mode == 'webcam':
                 while not receiver.empty():
                     receiver.get()  # clean the redundant input frames that is not able to process
-
             outputs_all = romp_model(image)
 
             if outputs_all is None:
+                client.send('none'.encode('utf-8'))
                 continue
-
+            
             poses = getAxisAngle(outputs_all['smpl_thetas'])[0]
             if 'cam_trans' not in outputs_all:
                 trans = convert_cam_to_3d_trans(outputs_all['cam']).tolist()
@@ -134,7 +134,7 @@ def recv_data(client, address):
                     gpu = body['gpu']
                     mode = body['mode']
                     # Create a new process for ROMP to process the image
-                    p = Process(target=run_romp, args=(receiver, sender, run, mode, gpu))
+                    p = Process(target=run_romp, args=(client, receiver, sender, run, mode, gpu))
                     print('Started ROMP process')
                     p.start()
                     # Create a new process to send the poses to the client
@@ -153,14 +153,15 @@ def recv_data(client, address):
                     p.join()
                     print('Transfer done. Connection closed by', address)
                     break
-
-
-
+            
+        if type == 'done':
+            break    
+          
 if __name__ == '__main__':
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind(('127.0.0.1', 10010))
+    server.bind(('127.0.0.1', int(sys.argv[1])))
     server.listen(5)
-    print('Waiting for connection...')
+    print('Waiting for connection on port {}'.format(sys.argv[1]))
 
     while True:
         client, address = server.accept()

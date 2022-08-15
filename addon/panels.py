@@ -1,6 +1,6 @@
 import bpy
 
-class CommonPanel(bpy.types.Panel):
+class COMMON_PT_myPanel(bpy.types.Panel):
     bl_label = "Common"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -31,13 +31,16 @@ class CommonPanel(bpy.types.Panel):
         row.prop(ctx.scene, 'insert_keyframe', text='Insert Keyframe')
 
         row = col.row(align = True)
+        row.prop(ctx.scene, 'insert_interval', text='Insert Interval')
+
+        row = col.row(align = True)
         row.prop(ctx.scene, 'quality', text='Compression(0~100)')
 
         row = col.row(align = True)
         row.operator("ops.fix_bones", text = "Fix Bones")
         
 
-class OfflinePanel(bpy.types.Panel):
+class OFFLINE_PT_myPanel(bpy.types.Panel):
     bl_label = "Image or Video"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -49,7 +52,7 @@ class OfflinePanel(bpy.types.Panel):
         row = col.row(align = True)
         row.operator("ops.offline_animation", text = "Offline Animation")
 
-class WebcamPanel(bpy.types.Panel):
+class WEBCAM_PT_myPanel(bpy.types.Panel):
     bl_label = "Webcam"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
