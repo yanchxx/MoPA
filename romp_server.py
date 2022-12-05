@@ -14,6 +14,7 @@ model_path = os.path.join(os.path.expanduser("~"), '.romp')
 warnings.filterwarnings('ignore')
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
+
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, np.integer):

@@ -193,8 +193,6 @@ class WebcamAnimation(Operator):
         self.webcam = cv2.VideoCapture(0)
         self.webcam.set(3, ctx.scene.width)
         self.webcam.set(4, ctx.scene.height)
-        cv2.namedWindow("frame")
-        cv2.resizeWindow("frame",320, 240)
 
         init = json.dumps(
             {
