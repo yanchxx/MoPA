@@ -38,7 +38,9 @@ This addon helps you drive a 3D character in Blender using ROMP based on image, 
 ### For Simple ROMP
 
 ```Shell
-# if you want to use GPU, you need to install pytorch-gpu and cuda first
+# create a conda environment separate from blender python
+conda create -n simple_romp python=3.8 -y
+conda install pytorch torchvision cudatoolkit -c pytorch # if you don't have GPU, don't execute this command
 pip install --upgrade setuptools numpy cython
 pip install --upgrade simple-romp
 
