@@ -3,6 +3,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ![GitHub repo size](https://img.shields.io/github/repo-size/yanchxx/CDBA.svg)
 
+This project is no longer maintained.
+
 This addon helps you drive a 3D character in Blender using ROMP based on image, video or webcam and get a 3D character that can be drived by ROMP.
 
 ## Demo
